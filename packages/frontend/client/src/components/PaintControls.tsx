@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useWallet } from "../hooks/useWallet.ts";
 
 const PALETTE = [
@@ -38,6 +38,21 @@ export function PaintControls({ canvasId, nextPaintIndex, disabled, onPainted }:
     }
   };
 
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      const idx = parseInt(e.key, 10);
+      if (idx >= 1 && idx <= 8) {
+        setColor(PALETTE[idx - 1]!);
+      } else if (e.key === " ") {
+        e.preventDefault();
+        if (!busy && !disabled) void paint();
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [busy, disabled, color]);
+
   if (!address) {
     return (
       <div className="card">
@@ -58,16 +73,23 @@ export function PaintControls({ canvasId, nextPaintIndex, disabled, onPainted }:
         )}
       </div>
       <div className="palette">
-        {PALETTE.map((c) => (
+        {PALETTE.map((c, i) => (
           <div
             key={c}
             className={`swatch${c === color ? " selected" : ""}`}
             style={{ background: c }}
             onClick={() => setColor(c)}
             role="button"
-            aria-label={`select ${c}`}
-          />
+            aria-label={`select ${c} (key ${i + 1})`}
+          >
+            <span className="swatch-key">{i + 1}</span>
+          </div>
         ))}
+      </div>
+      <div className="kb-hint">
+        <span>1–8 select color</span>
+        <span className="kb-sep">·</span>
+        <span>Space paint pixel</span>
       </div>
       <div className="row" style={{ marginTop: "0.75rem" }}>
         <button onClick={() => void paint()} disabled={disabled || busy}>

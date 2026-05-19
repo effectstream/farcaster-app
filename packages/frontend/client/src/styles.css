@@ -101,6 +101,32 @@ button.secondary {
   border-radius: 4px;
   cursor: pointer;
   border: 2px solid transparent;
+  position: relative;
+}
+
+.swatch-key {
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1;
+  pointer-events: none;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.6);
+}
+
+.kb-hint {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.5rem;
+}
+
+.kb-sep {
+  opacity: 0.4;
 }
 
 .swatch.selected {
