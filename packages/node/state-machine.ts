@@ -42,8 +42,7 @@ stm.addStateTransition("fork", function* (data) {
     });
 
     for (let i = 0; i < SEED_PAINT_COUNT; i++) {
-      const idx = Math.floor(randomGenerator() * SEED_PALETTE.length);
-      const color = SEED_PALETTE[idx]!;
+      const color = randomGenerator.nextArrayItem(SEED_PALETTE);
       yield* World.resolve(insertPaint, {
         canvasId: newId,
         painter: owner,
@@ -66,7 +65,10 @@ stm.addStateTransition("fork", function* (data) {
   const [{ id: newId }] = yield* World.resolve(insertCanvas, {
     owner,
     parentId: copyFrom,
-    paintCount: parentPaints.length,
+    // Use the parent's stored paint_count (next paint index), not the row count —
+    // they only match for contiguous paints, and a fork into a non-contiguous
+    // parent would collide with a cloned row on the first user paint.
+    paintCount: parent.paint_count,
     maxPaints: CANVAS_MAX_PAINTS,
     blockHeight,
   });

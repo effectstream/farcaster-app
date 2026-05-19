@@ -78,6 +78,17 @@ button.secondary {
   aspect-ratio: 1 / 1;
 }
 
+.canvas-cell.next {
+  outline: 2px solid white;
+  outline-offset: -2px;
+  animation: next-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes next-pulse {
+  0%, 100% { outline-color: rgba(255, 255, 255, 0.4); }
+  50% { outline-color: rgba(255, 255, 255, 1); }
+}
+
 .palette {
   display: grid;
   grid-template-columns: repeat(8, 1fr);

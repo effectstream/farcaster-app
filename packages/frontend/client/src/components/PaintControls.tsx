@@ -14,11 +14,12 @@ const PALETTE = [
 
 interface Props {
   canvasId: number;
+  nextPaintIndex?: number;
   disabled?: boolean;
   onPainted?: () => void;
 }
 
-export function PaintControls({ canvasId, disabled, onPainted }: Props) {
+export function PaintControls({ canvasId, nextPaintIndex, disabled, onPainted }: Props) {
   const { address, connecting, error, connect, submit } = useWallet();
   const [color, setColor] = useState(PALETTE[0]!);
   const [busy, setBusy] = useState(false);
@@ -50,8 +51,11 @@ export function PaintControls({ canvasId, disabled, onPainted }: Props) {
 
   return (
     <div className="card">
-      <div className="row">
+      <div className="row" style={{ justifyContent: "space-between" }}>
         <span className="muted">Pick a color</span>
+        {nextPaintIndex !== undefined && (
+          <span className="muted">Next: pixel #{nextPaintIndex}</span>
+        )}
       </div>
       <div className="palette">
         {PALETTE.map((c) => (

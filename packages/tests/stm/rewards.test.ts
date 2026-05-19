@@ -1,6 +1,6 @@
 import { assert } from "../helpers.ts";
 
-const API = process.env.GAME_NODE_URI ?? "http://localhost:9999";
+const API = process.env.GAME_NODE_URI ?? `http://localhost:${process.env.EFFECTSTREAM_API_PORT ?? 9999}`;
 
 export async function rewardsTest(): Promise<void> {
   // The rewards table is populated by an indexer/STM hook; for now we just verify

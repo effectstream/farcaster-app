@@ -58,6 +58,6 @@ RUN bun run build:evm
 RUN bun run build:frontend
 
 ENV NODE_ENV=development
-EXPOSE 3333 3334 5173 10599
+EXPOSE 9999 3334 5173 10599
 
 CMD ["bunx", "orchestrator", "start", "--config", "start.dev.ts"]

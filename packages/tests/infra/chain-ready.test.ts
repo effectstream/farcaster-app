@@ -14,11 +14,11 @@ export async function chainReadyTest(): Promise<void> {
   });
 
   await assert("Node API health check", async () => {
-    const url = (process.env.GAME_NODE_URI ?? "http://localhost:9999") + "/api/health";
+    const url = (process.env.GAME_NODE_URI ?? `http://localhost:${process.env.EFFECTSTREAM_API_PORT ?? 9999}`) + "/api/health";
     const res = await fetch(url);
     if (!res.ok) return false;
-    const data = (await res.json()) as { ok: boolean };
-    return data.ok === true;
+    const data = (await res.json()) as { status: string };
+    return data.status === "ok";
   });
 
   await assert("Batcher port is open", async () => {

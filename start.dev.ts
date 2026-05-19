@@ -18,7 +18,7 @@ export default {
       args: ["run", "packages/node/main.dev.ts"],
       waitToExit: false,
       type: "system-dependency",
-      env: { PGLITE: "true" },
+      env: { PGLITE: "true", MQTT_BROKER: "false" },
       stopProcessAtPort: [Number(process.env.EFFECTSTREAM_API_PORT ?? 9999)],
       link: `http://localhost:${process.env.EFFECTSTREAM_API_PORT ?? 9999}`,
       dependsOn: [DbNames.PGLITE_WAIT, EvmNames.GENERATE_MOD],

@@ -7,9 +7,10 @@ interface Props {
   canvasId: number;
   // When true the button creates a seed canvas (copyFromCanvasId = 0).
   seed?: boolean;
+  onCreated?: () => void;
 }
 
-export function ForkButton({ canvasId, seed }: Props) {
+export function ForkButton({ canvasId, seed, onCreated }: Props) {
   const { address, connect, submit } = useWallet();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
@@ -21,7 +22,7 @@ export function ForkButton({ canvasId, seed }: Props) {
     try {
       if (!address) await connect();
       await submit(["fork", seed ? 0 : canvasId]);
-      // Optimistic: open the home page to see new canvas list.
+      onCreated?.();
       navigate("/");
       // Compose a share cast — the latest canvas id is whatever the user just made.
       // Use canvasId here as a soft hint; on the canvas page it will refresh from API.
