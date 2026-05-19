@@ -1,0 +1,10 @@
+{
+  "name": "@farcaster-canvas/tests",
+  "version": "0.1.0",
+  "type": "module",
+  "dependencies": {
+    "@farcaster-canvas/contracts-evm": "0.1.0",
+    "pg": "^8.14.0",
+    "viem": "^2.21.0"
+  }
+}

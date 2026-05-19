@@ -1,0 +1,34 @@
+{
+  "name": "farcaster-canvas",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Collaborative pixel canvas — a Farcaster Mini App built on the Effectstream template",
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "dev": "NODE_ENV=development bunx orchestrator start",
+    "start:mainnet": "NODE_ENV=production bun run packages/node/main.mainnet.ts",
+    "start:batcher:mainnet": "NODE_ENV=production bun run packages/batcher/batcher.mainnet.ts",
+    "test": "bun run packages/tests/run-tests.ts",
+    "build:evm": "bun run --filter @farcaster-canvas/contracts-evm build:mod",
+    "build:pgtypes": "bun run --filter @farcaster-canvas/database pgtyped:update",
+    "build:frontend": "bun run --filter @farcaster-canvas/frontend build",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "@effectstream/orchestrator": "0.100.13",
+    "@electric-sql/pglite": "^0.3.14",
+    "wait-on": "8.0.3"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "prettier": "^3.3.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "bun": ">=1.1.0",
+    "node": ">=22.11.0"
+  },
+  "effectstream": {
+    "default": "start.dev.ts"
+  }
+}

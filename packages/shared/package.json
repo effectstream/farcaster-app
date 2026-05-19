@@ -1,0 +1,13 @@
+{
+  "name": "@farcaster-canvas/shared",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./mod.ts",
+    "./app-events": "./app-events.ts"
+  },
+  "dependencies": {
+    "@effectstream/event-client": "0.100.13",
+    "@sinclair/typebox": "^0.34.0"
+  }
+}

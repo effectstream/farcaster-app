@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link rel="icon" type="image/png" href="/icon.png" />
+    <title>Canvas — Farcaster Mini App</title>
+
+    <!--
+      Farcaster Mini App cast embed metadata.
+      When a user shares the URL of this page as a cast, the Farcaster client
+      reads `fc:miniapp` and renders the embed with a "Paint" launch button.
+      Per-canvas pages override `imageUrl` server-side to render the canvas
+      grid as the embed preview.
+    -->
+    <meta property="og:title" content="Canvas — Collaborative pixel painting" />
+    <meta property="og:description" content="Paint, fork, and earn on Farcaster." />
+    <meta
+      name="fc:miniapp"
+      content='{"version":"1","imageUrl":"/og.png","button":{"title":"Paint","action":{"type":"launch_miniapp","name":"Canvas","url":"/"}}}'
+    />
+    <!-- Backwards-compat for clients still reading the older fc:frame key. -->
+    <meta
+      name="fc:frame"
+      content='{"version":"next","imageUrl":"/og.png","button":{"title":"Paint","action":{"type":"launch_frame","name":"Canvas","url":"/"}}}'
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

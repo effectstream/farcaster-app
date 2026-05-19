@@ -1,0 +1,12 @@
+node_modules
+.orchestrator-logs
+batcher-data
+.env
+.env.local
+.env.dev
+.env.mainnet
+*.log
+.git
+packages/*/dist
+packages/*/build
+packages/frontend/client/dist

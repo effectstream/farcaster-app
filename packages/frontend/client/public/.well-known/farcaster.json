@@ -1,0 +1,20 @@
+{
+  "accountAssociation": {
+    "header": "",
+    "payload": "",
+    "signature": ""
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "Canvas",
+    "homeUrl": "https://canvas.example.com",
+    "iconUrl": "https://canvas.example.com/icon.png",
+    "splashImageUrl": "https://canvas.example.com/splash.png",
+    "splashBackgroundColor": "#1a1a2e",
+    "description": "Collaborative pixel painting on Farcaster — paint, fork, earn.",
+    "primaryCategory": "games",
+    "tags": ["pixel", "canvas", "art", "collaborative"],
+    "ogTitle": "Canvas — Collaborative pixel painting",
+    "ogDescription": "Paint a pixel, fork a canvas, earn from your forks."
+  }
+}

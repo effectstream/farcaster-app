@@ -1,0 +1,41 @@
+{
+  "name": "@farcaster-canvas/contracts-evm",
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./mod.ts",
+    "./build": "./build/mod.ts",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build:mod": "(bun run deploy:standalone || true) && bun -e 'await import(\"@effectstream/evm-hardhat/builder\")'",
+    "build:clean": "rm -rf build || true",
+    "build:hardhat": "bun ./node_modules/.bin/hardhat compile && mkdir -p build && printf 'export {};\\n' > build/mod.ts",
+    "build": "bun run build:clean && bun run build:hardhat",
+    "deploy:clean": "rm -rf ignition/deployments || true",
+    "deploy:standalone": "bun run deploy:clean && bun run build && (((bun run chain:start) &) && (bun run chain:wait) && (bun run deploy) && (bun run chain:stop)) || true",
+    "deploy": "bun run deploy:clean && bun run deploy.ts",
+    "deploy:mainnet": "bun ./node_modules/.bin/hardhat ignition deploy ignition/modules/canvasGame.ts --network base",
+    "chain:start": "bun ./node_modules/.bin/hardhat node",
+    "chain:stop": "kill -9 $(lsof -ti tcp:8545) || true",
+    "chain:wait": "bun ./node_modules/.bin/hardhat node wait"
+  },
+  "dependencies": {
+    "@effectstream/evm-contracts": "0.100.13",
+    "@effectstream/evm-hardhat": "0.100.13",
+    "@effectstream/log": "0.100.13",
+    "@nomicfoundation/hardhat-errors": "3.0.1",
+    "@nomicfoundation/hardhat-ignition-viem": "3.0.2",
+    "@nomicfoundation/hardhat-utils": "3.0.0",
+    "@nomicfoundation/hardhat-viem": "3.0.0",
+    "@nomicfoundation/ignition-core": "3.0.2",
+    "ws": "8.18.1"
+  },
+  "devDependencies": {
+    "@opentelemetry/sdk-node": "0.56.0",
+    "hardhat": "3.0.4",
+    "jsonc-parser": "3.3.1",
+    "wait-on": "8.0.3"
+  }
+}
