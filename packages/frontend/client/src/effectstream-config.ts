@@ -9,11 +9,12 @@ const chain = chainId === 8453 ? base : hardhat;
 const CONTRACT_PLACEHOLDER = "0x0000000000000000000000000000000000000000" as const;
 
 export const effectstreamConfig = new EffectstreamConfig(
-  // appName — MUST match BatcherConfig.namespace
+  // appName — MUST match BatcherConfig.namespace (frontend uses "" → batcher uses "")
   "",
-  // syncProtocolName — must match the parallel sync defined in config.{dev|mainnet}.ts
-  "mainEvmRpc",
-  // EffectstreamL2 contract address
+  // syncProtocolName — must match the parallel sync name declared in config.{dev|mainnet}.ts
+  // and the adapter key registered via batcher.addBlockchainAdapter(...).
+  "canvas-l2",
+  // EffectstreamL2 contract address — set via env at build time
   (import.meta.env.VITE_CANVAS_GAME_ADDRESS ?? CONTRACT_PLACEHOLDER) as `0x${string}`,
   chain,
   undefined,

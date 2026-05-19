@@ -36,14 +36,28 @@ bunx cloudflared tunnel --url http://localhost:5173
 
 ### Required mainnet env vars
 
+Backend (validated at boot by `config.mainnet.ts` / `batcher.mainnet.ts`):
+
 | Variable | Notes |
 |---|---|
 | `EVM_RPC_URL` | Base mainnet RPC (Alchemy/Infura/QuickNode/etc.) |
-| `CANVAS_GAME_ADDRESS` | Output of `bunx hardhat ignition deploy ignition/modules/canvasGame.ts --network base` |
-| `START_BLOCKHEIGHT` | Block height the contract was deployed at |
+| `CANVAS_GAME_ADDRESS` | Output of `bun run --filter @farcaster-canvas/contracts-evm deploy:mainnet` |
+| `START_BLOCKHEIGHT` | Block height the contract was deployed at (look up the deploy tx on basescan.org) |
 | `DB_HOST` / `DB_PORT` / `DB_NAME` / `DB_USER` / `DB_PW` | Managed Postgres connection |
 | `EVM_PRIVATE_KEY` | Batcher hot wallet (funded with Base ETH for gas) |
+| `CORS_ORIGIN` | Mini App origin allowed to call the API, e.g. `https://canvas.example.com`. Comma-separate for multiple. |
+| `EFFECTSTREAM_API_PORT` | Defaults to `9999`. Expose this behind your reverse proxy at `api.<domain>`. |
+| `BATCHER_PORT` | Defaults to `3334`. Expose this at `batcher.<domain>`. |
+
+Frontend (baked into the SPA at build time — rebuild after changing any):
+
+| Variable | Notes |
+|---|---|
 | `VITE_APP_URL` | Production Mini App domain registered in Warpcast |
+| `VITE_API_URL` | Public URL of the node API (e.g. `https://api.canvas.example.com`) |
+| `VITE_BATCHER_URL` | Public URL of the batcher (e.g. `https://batcher.canvas.example.com`) |
+| `VITE_CHAIN_ID` | `8453` for Base mainnet |
+| `VITE_CANVAS_GAME_ADDRESS` | Same value as `CANVAS_GAME_ADDRESS` |
 | `VITE_MANIFEST_URL` | Hosted manifest URL from the Warpcast Mini App Manifest Tool |
 
 ## Testing
@@ -80,8 +94,8 @@ farcaster/
 
 - **node** — `grammar.ts` (Typebox-validated `paint` / `fork`), `state-machine.ts` (clones paints on fork, inserts paints, emits `PaintApplied` / `CanvasFilled`), `api.ts` (canvases / paints / rewards endpoints).
 - **database** — Single migration creating `canvases`, `paints`, `rewards`. All app-code queries are pgtyped `PreparedQuery` objects re-exported from `mod.ts`.
-- **contracts-evm** — `CanvasGame.sol` extends `EffectstreamL2Contract`. `paint(canvasId, canvasOwner, color)` and `fork(copyFromCanvasId)` are both payable; fees split 10/90 between contract owner and canvas owner.
-- **batcher** — Aggregates user inputs over time windows and submits batched txs to the contract via `EffectstreamL2DefaultAdapter`. Namespace `""` matches the frontend's `EffectstreamConfig`.
+- **contracts-evm** — `CanvasGame.sol` is a minimal `EffectstreamL2Contract` subclass — no custom logic. All game rules (paint/fork/seed/rewards) live in the STM. Users submit JSON inputs through the inherited `effectstreamSubmitGameInput`. Reward economics (the original Paima 90/10 split) are tracked off-chain in the `rewards` table; an onchain treasury contract is a future extension.
+- **batcher** — Aggregates user inputs over time windows and submits batched txs to the contract via `EffectstreamL2DefaultAdapter`. The adapter is registered with `batcher.addBlockchainAdapter("canvas-l2", …)`, matching the sync-protocol name in `config.{dev,mainnet}.ts`. Namespace `""` matches the frontend's `EffectstreamConfig`.
 - **frontend** — Mini App. `miniapp.ts` calls `sdk.actions.ready()` after mount, exposes `composeCast` for share buttons, and surfaces the host's EIP-1193 provider to `walletLogin`.
 - **shared** — `AppEvents` declares `CanvasCreated` / `PaintApplied` / `CanvasFilled` so the frontend can subscribe via `EventManager`.
 
@@ -123,8 +137,19 @@ farcaster/
 
 ## Docker
 
+The default `Dockerfile` sets `NODE_ENV=development` and runs `start.dev.ts` (PGlite + anvil + node + batcher + Vite). For production builds, override `NODE_ENV` and `CMD`.
+
 ```bash
+# Dev image — all services run in one container
 docker build -f Dockerfile . -t farcaster-canvas
 docker run -p 5173:5173 -p 9999:9999 -p 3334:3334 -p 8545:8545 farcaster-canvas
 docker run farcaster-canvas bun run test
+
+# Prod — split into two long-running containers + a static frontend host
+docker run -d --env-file .env -e NODE_ENV=production -p 9999:9999 \
+  farcaster-canvas bun run start:mainnet
+docker run -d --env-file .env -e NODE_ENV=production -p 3334:3334 \
+  farcaster-canvas bun run start:batcher:mainnet
 ```
+
+The Mini App SPA is meant for a static host (Cloudflare Pages, Vercel, Netlify) rather than a long-running container — it's a bundle of HTML/JS + the `.well-known/farcaster.json` manifest.

@@ -5,7 +5,7 @@
   "description": "Collaborative pixel canvas — a Farcaster Mini App built on the Effectstream template",
   "workspaces": ["packages/*"],
   "scripts": {
-    "dev": "NODE_ENV=development bunx orchestrator start",
+    "dev": "NODE_ENV=development bunx orchestrator start --log-dir .orchestrator-logs",
     "start:mainnet": "NODE_ENV=production bun run packages/node/main.mainnet.ts",
     "start:batcher:mainnet": "NODE_ENV=production bun run packages/batcher/batcher.mainnet.ts",
     "test": "bun run packages/tests/run-tests.ts",

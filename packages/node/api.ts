@@ -17,8 +17,32 @@ export const apiRouter: StartConfigApiRouter = async (
   server: FastifyInstance,
   dbConn: Pool,
 ) => {
+  // CORS — the Mini App is served from VITE_APP_URL while the API typically
+  // lives on a different subdomain (api.canvas.example.com). Without this the
+  // browser blocks `fetch("/api/...")` from the Mini App origin.
+  // Set CORS_ORIGIN in the env: a single origin, comma-separated list, or "*".
+  const corsOrigin = process.env.CORS_ORIGIN ?? "*";
+  const allowedOrigins = corsOrigin.split(",").map((s) => s.trim());
+
+  server.addHook("onSend", async (req, reply) => {
+    const reqOrigin = req.headers.origin;
+    const allow = allowedOrigins.includes("*")
+      ? "*"
+      : reqOrigin && allowedOrigins.includes(reqOrigin)
+      ? reqOrigin
+      : allowedOrigins[0] ?? "*";
+    reply.header("access-control-allow-origin", allow);
+    reply.header("access-control-allow-methods", "GET, POST, OPTIONS");
+    reply.header("access-control-allow-headers", "content-type");
+    reply.header("vary", "origin");
+  });
+
+  server.options("/api/*", async (_req, reply) => {
+    reply.code(204).send();
+  });
+
   server.get("/api/health", async (_req, reply) => {
-    reply.send({ ok: true });
+    reply.send({ status: "ok" });
   });
 
   server.get("/api/canvases", async (req, reply) => {
