@@ -15,6 +15,14 @@ const CANVAS_GAME_ADDRESS = process.env.CANVAS_GAME_ADDRESS as
   | `0x${string}`
   | undefined;
 const START_BLOCKHEIGHT = process.env.START_BLOCKHEIGHT;
+// Optional RPC throttling — raise stepSize for chunkier eth_getLogs calls,
+// raise delayMs to pace requests under a provider's rate limit.
+const EVM_STEP_SIZE = process.env.EVM_STEP_SIZE
+  ? Number(process.env.EVM_STEP_SIZE)
+  : 1000;
+const EVM_DELAY_MS = process.env.EVM_DELAY_MS
+  ? Number(process.env.EVM_DELAY_MS)
+  : 0;
 const DB_HOST = process.env.DB_HOST;
 const DB_NAME = process.env.DB_NAME;
 const DB_USER = process.env.DB_USER;
@@ -83,6 +91,8 @@ export const config = new ConfigBuilder()
           startBlockHeight: Number(START_BLOCKHEIGHT),
           pollingInterval: 2000,
           confirmationDepth: 3,
+          stepSize: EVM_STEP_SIZE,
+          delayMs: EVM_DELAY_MS,
         }),
       ),
   )
