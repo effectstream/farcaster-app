@@ -91,7 +91,7 @@ farcaster/
 |---|---|---|
 | Vite dev | 5173 | Mini App UI |
 | Frontend static | 10599 | Fastify static (prod) |
-| Node API | 3333 | REST + MQTT events |
+| Node API | 9999 | REST + MQTT events |
 | Batcher | 3334 | HTTP `submit_user_input` + event stream |
 | Anvil | 8545 | Local EVM |
 | PGlite | 5432 | Dev Postgres |
@@ -125,6 +125,6 @@ farcaster/
 
 ```bash
 docker build -f Dockerfile . -t farcaster-canvas
-docker run -p 5173:5173 -p 3333:3333 -p 3334:3334 -p 8545:8545 farcaster-canvas
+docker run -p 5173:5173 -p 9999:9999 -p 3334:3334 -p 8545:8545 farcaster-canvas
 docker run farcaster-canvas bun run test
 ```

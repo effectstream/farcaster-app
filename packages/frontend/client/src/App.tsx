@@ -3,6 +3,7 @@ import { Route, Routes } from "react-router-dom";
 import { markReady } from "./miniapp.ts";
 import { Home } from "./pages/Home.tsx";
 import { CanvasPage } from "./pages/CanvasPage.tsx";
+import { ConnectWalletButton } from "./components/ConnectWalletButton.tsx";
 
 export function App() {
   useEffect(() => {
@@ -16,7 +17,7 @@ export function App() {
         <h1>
           <a href="/">Canvas</a>
         </h1>
-        <span className="muted">Farcaster Mini App</span>
+        <ConnectWalletButton />
       </header>
       <Routes>
         <Route path="/" element={<Home />} />

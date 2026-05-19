@@ -1,7 +1,7 @@
 import { Client } from "pg";
 import { assertSQL } from "../helpers.ts";
 
-const API = process.env.GAME_NODE_URI ?? "http://localhost:3333";
+const API = process.env.GAME_NODE_URI ?? "http://localhost:9999";
 const BATCHER = process.env.BATCHER_URI ?? "http://localhost:3334";
 
 async function submitToBatcher(input: unknown[]) {

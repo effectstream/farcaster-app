@@ -19,8 +19,8 @@ export default {
       waitToExit: false,
       type: "system-dependency",
       env: { PGLITE: "true" },
-      stopProcessAtPort: [3333],
-      link: "http://localhost:3333",
+      stopProcessAtPort: [Number(process.env.EFFECTSTREAM_API_PORT ?? 9999)],
+      link: `http://localhost:${process.env.EFFECTSTREAM_API_PORT ?? 9999}`,
       dependsOn: [DbNames.PGLITE_WAIT, EvmNames.GENERATE_MOD],
     },
 

@@ -12,8 +12,8 @@ export default {
       args: ["run", "packages/node/main.mainnet.ts"],
       waitToExit: false,
       type: "system-dependency",
-      stopProcessAtPort: [Number(process.env.NODE_PORT ?? 3333)],
-      link: `http://localhost:${process.env.NODE_PORT ?? 3333}`,
+      stopProcessAtPort: [Number(process.env.EFFECTSTREAM_API_PORT ?? 9999)],
+      link: `http://localhost:${process.env.EFFECTSTREAM_API_PORT ?? 9999}`,
       dependsOn: [],
     },
 

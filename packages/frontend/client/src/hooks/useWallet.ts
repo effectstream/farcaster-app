@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { walletLogin, WalletMode, sendTransaction } from "@effectstream/wallets";
+import {
+  walletLogin,
+  WalletMode,
+  sendTransaction,
+  type Wallet,
+} from "@effectstream/wallets";
 import { effectstreamConfig } from "../effectstream-config.ts";
 import { getEthProvider } from "../miniapp.ts";
 
@@ -11,7 +16,20 @@ export interface WalletState {
   submit: (input: unknown[]) => Promise<void>;
 }
 
-let cachedWallet: Awaited<ReturnType<typeof walletLogin>> | null = null;
+let cachedWallet: Wallet | null = null;
+
+function getInjectedProvider(): { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> } | undefined {
+  const miniProvider = getEthProvider();
+  if (miniProvider) {
+    // If the Mini App host injects a provider, expose it as window.ethereum so
+    // the underlying injected-wallet connector picks it up. No-op when MetaMask
+    // is already present in a regular browser tab.
+    const w = globalThis as { ethereum?: unknown };
+    if (!w.ethereum) w.ethereum = miniProvider;
+    return miniProvider as never;
+  }
+  return (globalThis as { ethereum?: never }).ethereum;
+}
 
 export function useWallet(): WalletState {
   const [address, setAddress] = useState<`0x${string}` | null>(null);
@@ -22,23 +40,31 @@ export function useWallet(): WalletState {
     setConnecting(true);
     setError(null);
     try {
-      // Prefer the Mini App host's injected provider; fall back to window.ethereum.
-      const provider = getEthProvider() ?? (globalThis as any).ethereum;
-      if (!provider) throw new Error("No EIP-1193 provider available");
-      cachedWallet = await walletLogin(effectstreamConfig, WalletMode.EvmInjected, {
-        provider,
-      } as never);
-      setAddress(cachedWallet.address as `0x${string}`);
+      const provider = getInjectedProvider();
+      if (!provider) throw new Error("No EIP-1193 provider found (install MetaMask or open in a Farcaster client)");
+
+      const result = await walletLogin({
+        mode: WalletMode.EvmInjected,
+        preferBatchedMode: effectstreamConfig.preferBatchedMode,
+        checkChainId: true,
+        chain: effectstreamConfig.effectstreamL2Chain,
+      });
+
+      if (!result.success) throw new Error(result.errorMessage);
+      cachedWallet = result.result;
+      setAddress(cachedWallet.walletAddress as `0x${string}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Connection failed");
+      const msg = err instanceof Error ? err.message : "Connection failed";
+      console.error("[useWallet] connect failed:", err);
+      setError(msg);
     } finally {
       setConnecting(false);
     }
   }, []);
 
-  // Eagerly attempt to surface an already-authorized address from the Mini App host.
+  // Eagerly surface an already-authorized address from the injected provider.
   useEffect(() => {
-    const provider = getEthProvider();
+    const provider = getInjectedProvider();
     if (!provider) return;
     (async () => {
       try {
@@ -55,7 +81,7 @@ export function useWallet(): WalletState {
     if (!cachedWallet) throw new Error("Wallet not connected");
     await sendTransaction(
       cachedWallet,
-      input as never,
+      input,
       effectstreamConfig,
       "wait-effectstream-processed",
     );

@@ -14,7 +14,7 @@ export async function chainReadyTest(): Promise<void> {
   });
 
   await assert("Node API health check", async () => {
-    const url = (process.env.GAME_NODE_URI ?? "http://localhost:3333") + "/api/health";
+    const url = (process.env.GAME_NODE_URI ?? "http://localhost:9999") + "/api/health";
     const res = await fetch(url);
     if (!res.ok) return false;
     const data = (await res.json()) as { ok: boolean };
