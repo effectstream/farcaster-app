@@ -6,11 +6,7 @@ export function ConnectWalletButton() {
   if (address) {
     const short = `${address.slice(0, 6)}…${address.slice(-4)}`;
     return (
-      <button
-        className="secondary"
-        style={{ padding: "0.35em 0.7em", fontSize: "0.85em" }}
-        disabled
-      >
+      <button className="secondary compact" disabled>
         {short}
       </button>
     );
@@ -19,8 +15,7 @@ export function ConnectWalletButton() {
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
       <button
-        className="secondary"
-        style={{ padding: "0.35em 0.7em", fontSize: "0.85em" }}
+        className="secondary compact"
         onClick={() => void connect()}
         disabled={connecting}
       >
