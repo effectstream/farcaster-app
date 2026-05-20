@@ -1,8 +1,9 @@
 import type { OrchestratorConfig } from "@effectstream/orchestrator/config";
 
 // Production orchestrator: no PGlite (use managed Postgres), no anvil (use Base RPC).
-// Run the node + batcher + static frontend server alongside each other. The
-// frontend assumes its dist/ has already been built (CI step or `bun run build:frontend`).
+// Runs node + batcher side-by-side so the batcher SDK's hardcoded
+// `http://localhost:${EFFECTSTREAM_API_PORT}` confirmation calls reach the node.
+// The frontend is deployed separately (Cloudflare Pages) and is NOT started here.
 
 export default {
   processes: [
@@ -25,17 +26,6 @@ export default {
       type: "system-dependency",
       stopProcessAtPort: [Number(process.env.BATCHER_PORT ?? 3334)],
       link: `http://localhost:${process.env.BATCHER_PORT ?? 3334}`,
-      dependsOn: [],
-    },
-
-    {
-      name: "frontend",
-      description: "Mini App static server (mainnet)",
-      args: ["run", "--filter", "@farcaster-canvas/frontend", "serve"],
-      waitToExit: false,
-      type: "system-dependency",
-      stopProcessAtPort: [Number(process.env.FRONTEND_PORT ?? 10599)],
-      link: `http://localhost:${process.env.FRONTEND_PORT ?? 10599}`,
       dependsOn: [],
     },
   ],

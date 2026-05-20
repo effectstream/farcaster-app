@@ -18,8 +18,8 @@ export interface WalletState {
 
 let cachedWallet: Wallet | null = null;
 
-function getInjectedProvider(): { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> } | undefined {
-  const miniProvider = getEthProvider();
+async function getInjectedProvider(): Promise<{ request: (args: { method: string; params?: unknown[] }) => Promise<unknown> } | undefined> {
+  const miniProvider = await getEthProvider();
   if (miniProvider) {
     // If the Mini App host injects a provider, expose it as window.ethereum so
     // the underlying injected-wallet connector picks it up. No-op when MetaMask
@@ -40,7 +40,7 @@ export function useWallet(): WalletState {
     setConnecting(true);
     setError(null);
     try {
-      const provider = getInjectedProvider();
+      const provider = await getInjectedProvider();
       if (!provider) throw new Error("No EIP-1193 provider found (install MetaMask or open in a Farcaster client)");
 
       const result = await walletLogin({
@@ -64,9 +64,9 @@ export function useWallet(): WalletState {
 
   // Eagerly surface an already-authorized address from the injected provider.
   useEffect(() => {
-    const provider = getInjectedProvider();
-    if (!provider) return;
     (async () => {
+      const provider = await getInjectedProvider();
+      if (!provider) return;
       try {
         const accounts = (await provider.request({ method: "eth_accounts" })) as string[];
         if (accounts?.[0]) setAddress(accounts[0] as `0x${string}`);

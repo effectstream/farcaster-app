@@ -42,9 +42,10 @@ export async function shareCanvas(canvasId: number, opts?: { forked?: boolean })
 
 /**
  * Expose the EIP-1193 wallet provider that the Mini App host injects.
- * Used by `@effectstream/wallets` walletLogin in EvmInjected mode.
+ * Resolves to `undefined` outside a Farcaster client so callers can fall back
+ * to `window.ethereum` (MetaMask etc.). Used by `@effectstream/wallets`
+ * walletLogin in EvmInjected mode.
  */
-export function getEthProvider() {
-  // @ts-expect-error — provider type isn't fully typed in older SDK versions
-  return sdk.wallet?.ethProvider;
+export async function getEthProvider() {
+  return await sdk.wallet.getEthereumProvider();
 }

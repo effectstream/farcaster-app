@@ -11,6 +11,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
     rm -rf /var/lib/apt/lists/*
 
 # ----------------------------- Foundry (anvil) -------------------------
+# Needed at image-build time for build:evm (contract compilation).
 RUN ARCH=$(uname -m) && \
     if [ "$ARCH" = "aarch64" ]; then FOUNDRY_ARCH="arm64"; else FOUNDRY_ARCH="amd64"; fi && \
     curl -L "https://github.com/foundry-rs/foundry/releases/download/v1.3.0-rc1/foundry_v1.3.0-rc1_alpine_${FOUNDRY_ARCH}.tar.gz" \
@@ -28,9 +29,22 @@ RUN mkdir -p /root/.cache/hardhat-nodejs/compilers-v3/wasm && \
 
 # ----------------------------- App ------------------------------------
 WORKDIR /app
-COPY . .
+
+# Copy lockfile + every workspace package.json first so the `bun install`
+# layer only invalidates when dependencies change, not on every source edit.
+COPY package.json bun.lock ./
+COPY packages/batcher/package.json packages/batcher/
+COPY packages/contracts-evm/package.json packages/contracts-evm/
+COPY packages/database/package.json packages/database/
+COPY packages/frontend/package.json packages/frontend/
+COPY packages/node/package.json packages/node/
+COPY packages/shared/package.json packages/shared/
+COPY packages/tests/package.json packages/tests/
 
 RUN bun install
+
+# Now copy the rest of the source.
+COPY . .
 
 # Workaround: Bun on Linux doesn't create workspace symlinks in node_modules/.
 RUN bun -e " \
@@ -53,11 +67,12 @@ RUN bun -e " \
   }"
 
 # Compile contracts and generate the contract-addresses mod.ts.
+# (Frontend build is skipped — it is deployed separately to Cloudflare Pages.)
 RUN bun run build:evm
-# Build the frontend SPA.
-RUN bun run build:frontend
 
-ENV NODE_ENV=development
-EXPOSE 9999 3334 5173 10599
+ENV NODE_ENV=production
+EXPOSE 9999 3334
 
-CMD ["bunx", "orchestrator", "start", "--config", "start.dev.ts"]
+# Default CMD is the Node service. Override with --command on `fly deploy`
+# (or via [processes] in fly.toml) to launch the batcher instead.
+CMD ["bun", "run", "start:mainnet"]
