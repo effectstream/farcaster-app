@@ -1,20 +1,18 @@
 {
-  "accountAssociation": {
-    "header": "",
-    "payload": "",
-    "signature": ""
-  },
-  "miniapp": {
-    "version": "1",
+  "frame": {
     "name": "Canvas",
-    "homeUrl": "https://canvas.example.com",
-    "iconUrl": "https://canvas.example.com/icon.png",
-    "splashImageUrl": "https://canvas.example.com/splash.png",
-    "splashBackgroundColor": "#1a1a2e",
-    "description": "Collaborative pixel painting on Farcaster — paint, fork, earn.",
-    "primaryCategory": "games",
-    "tags": ["pixel", "canvas", "art", "collaborative"],
-    "ogTitle": "Canvas — Collaborative pixel painting",
-    "ogDescription": "Paint a pixel, fork a canvas, earn from your forks."
+    "version": "1",
+    "iconUrl": "https://canvas-effectstream.pages.dev/icon.png",
+    "homeUrl": "https://canvas-effectstream.pages.dev",
+    "splashImageUrl": "https://canvas-effectstream.pages.dev/splash.png",
+    "splashBackgroundColor": "#234400",
+    "subtitle": "Paint Canvas made with Effectstream",
+    "description": "Connect wallet and paint pixels",
+    "primaryCategory": "art-creativity"
+  },
+  "accountAssociation": {
+    "header": "eyJmaWQiOjMzMzE5NjQsInR5cGUiOiJhdXRoIiwia2V5IjoiMHgzNjk3NWE1MDlmN0EzNDNlNzE0YWI2RkQ5MGY5OTZBYmNiMkFiYWFCIn0",
+    "payload": "eyJkb21haW4iOiJjYW52YXMtZWZmZWN0c3RyZWFtLnBhZ2VzLmRldiJ9",
+    "signature": "Pz2woDv9oyEBQPCwmFUMorE3aB+t9Amqk20z6lmMC90mhkts53qBSyBGMrbTnzdiFwLR09GEJ+dOwVkgYTCUVBw="
   }
 }

@@ -66,9 +66,16 @@ RUN bun -e " \
     } \
   }"
 
-# Compile contracts and generate the contract-addresses mod.ts.
-# (Frontend build is skipped — it is deployed separately to Cloudflare Pages.)
-RUN bun run build:evm
+# Stub the contracts-evm build output instead of running `bun run build:evm`.
+# Why: build:evm spins up Hardhat under Node which hits a webstreams_adapters
+# crash on Node 24, AND the mainnet runtime never imports from this package —
+# only config.dev.ts / batcher.dev.ts do. We just need the build/ files to
+# exist so `packages/contracts-evm/mod.ts` re-exports don't crash if anything
+# transitively imports them.
+RUN mkdir -p packages/contracts-evm/build && \
+    echo 'export {};' > packages/contracts-evm/build/mod.ts && \
+    printf 'import path from "node:path";\nconst __dirname = import.meta.dirname ?? "";\nexport const contracts = { CanvasGame: path.join(__dirname, "src/contracts/CanvasGame.sol") } as const;\n' \
+        > packages/contracts-evm/build/contracts.ts
 
 ENV NODE_ENV=production
 EXPOSE 9999 3334

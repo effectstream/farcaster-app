@@ -1,0 +1,94 @@
+# Fly.io config — single app running Node + Batcher side-by-side via the orchestrator.
+#
+# Why colocated: @effectstream/batcher-sdk hardcodes
+# `http://localhost:${EFFECTSTREAM_API_PORT}` when checking node-side
+# confirmation, so the two processes must share `localhost`.
+#
+# Deploy with:
+#   fly deploy --config fly.node.toml
+#
+# One-time setup:
+#   fly apps create canvas-node
+#   fly volumes create batcher_data --size 1 --region iad -a canvas-node
+#
+# Required secrets (set via `fly secrets set -a canvas-node ...`):
+#   EVM_RPC_URL, CANVAS_GAME_ADDRESS, START_BLOCKHEIGHT,
+#   DB_HOST, DB_NAME, DB_USER, DB_PW, PGSSLMODE,
+#   EVM_PRIVATE_KEY, CORS_ORIGIN
+
+app = "canvas-node"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  EFFECTSTREAM_API_PORT = "9999"
+  BATCHER_PORT = "3334"
+  CHAIN_ID = "8453"
+  CHAIN_NAME = "Base"
+  DB_PORT = "5432"
+  # Free-tier Alchemy (~300 CU/sec). Each eth_getBlockByNumber is ~16 CU and
+  # the runtime fires `stepSize` calls in parallel, so stay well under the cap.
+  # Bump these (or move to paid Alchemy) once initial catch-up is done.
+  EVM_STEP_SIZE = "100"
+  EVM_DELAY_MS = "200"
+  # @effectstream/utils defaults PGLITE to `true`. That makes @effectstream/db
+  # pass `undefined` as the Postgres password, which Neon rejects with
+  # "SASL: client password must be a string". Force it off in production.
+  PGLITE = "false"
+
+[processes]
+  app = "bunx orchestrator start --config start.mainnet.ts"
+
+# Persistent volume for the batcher's file-backed tx queue.
+[[mounts]]
+  source = "batcher_data"
+  destination = "/app/batcher-data"
+  processes = ["app"]
+
+# ---------------------------------------------------------------------------
+# Public HTTPS endpoint #1 — Node API on internal port 9999, served at
+# https://canvas-node.fly.dev (standard 443).
+# ---------------------------------------------------------------------------
+[http_service]
+  internal_port = 9999
+  force_https = true
+  # Long-running blockchain sync — never let Fly stop the machine.
+  auto_stop_machines = "off"
+  auto_start_machines = false
+  min_machines_running = 1
+  processes = ["app"]
+
+  [[http_service.checks]]
+    # Catch-up sync can starve the event loop for 10+ seconds at a time,
+    # making the health check time out. Generous values keep the proxy happy
+    # while sync churns through historical blocks on first boot.
+    interval = "60s"
+    timeout = "30s"
+    grace_period = "300s"
+    method = "GET"
+    path = "/api/health"
+
+# ---------------------------------------------------------------------------
+# Public HTTPS endpoint #2 — Batcher on internal port 3334, served at
+# https://canvas-node.fly.dev:3334 (non-standard HTTPS port; browsers handle it).
+# ---------------------------------------------------------------------------
+[[services]]
+  internal_port = 3334
+  protocol = "tcp"
+  processes = ["app"]
+
+  [[services.ports]]
+    port = 3334
+    handlers = ["http", "tls"]
+    force_https = true
+
+  [[services.tcp_checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "60s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "1024mb"

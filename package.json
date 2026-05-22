@@ -12,6 +12,7 @@
     "build:evm": "bun run --filter @farcaster-canvas/contracts-evm build:mod",
     "build:pgtypes": "bun run --filter @farcaster-canvas/database pgtyped:update",
     "build:frontend": "bun run --filter @farcaster-canvas/frontend build",
+    "deploy:frontend": "bunx wrangler pages deploy packages/frontend/client/dist --project-name=canvas-effectstream",
     "format": "prettier --write ."
   },
   "dependencies": {

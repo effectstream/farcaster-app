@@ -6,6 +6,8 @@ import path from "node:path";
 export default defineConfig({
   root: path.join(import.meta.dirname, "client"),
   publicDir: path.join(import.meta.dirname, "client/public"),
+  // Read .env from the repo root so frontend + backend share one env file.
+  envDir: path.join(import.meta.dirname, "../.."),
   plugins: [
     react(),
     nodePolyfills({
