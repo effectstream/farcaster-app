@@ -16,7 +16,7 @@
     "format": "prettier --write ."
   },
   "dependencies": {
-    "@effectstream/orchestrator": "0.100.13",
+    "@effectstream/orchestrator": "0.100.18",
     "@electric-sql/pglite": "^0.3.14",
     "wait-on": "8.0.3"
   },

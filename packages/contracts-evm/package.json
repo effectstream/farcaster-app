@@ -22,9 +22,9 @@
     "chain:wait": "bun ./node_modules/.bin/hardhat node wait"
   },
   "dependencies": {
-    "@effectstream/evm-contracts": "0.100.13",
-    "@effectstream/evm-hardhat": "0.100.13",
-    "@effectstream/log": "0.100.13",
+    "@effectstream/evm-contracts": "0.100.18",
+    "@effectstream/evm-hardhat": "0.100.18",
+    "@effectstream/log": "0.100.18",
     "@nomicfoundation/hardhat-errors": "3.0.1",
     "@nomicfoundation/hardhat-ignition-viem": "3.0.2",
     "@nomicfoundation/hardhat-utils": "3.0.0",
