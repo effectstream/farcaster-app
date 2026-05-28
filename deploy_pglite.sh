@@ -94,8 +94,21 @@ fi
 # attach. Check before creating.
 # ---------------------------------------------------------------------------
 have_volume() {
+  # `fly volumes list` renders a box-drawing table where `│` is the column
+  # separator. Splitting on it puts NAME in $3 (after ID, STATE). We strip
+  # surrounding whitespace before comparing. The default whitespace FS
+  # treats `│` as its own field and shifts everything by one — that's why
+  # an earlier version of this check silently always returned false and
+  # let `fly volumes create` spawn a new volume on every deploy.
   fly volumes list -a "$APP_NAME" 2>/dev/null \
-    | awk -v v="$1" 'NR>1 && $2==v {found=1} END {exit !found}'
+    | awk -F'│' -v v="$1" '
+        NR > 1 {
+          name = $3
+          gsub(/^[[:space:]]+|[[:space:]]+$/, "", name)
+          if (name == v) found = 1
+        }
+        END { exit !found }
+      '
 }
 
 ensure_volume() {
