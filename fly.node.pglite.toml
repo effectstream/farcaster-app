@@ -1,0 +1,114 @@
+# Fly.io config — PGlite-on-volume variant of fly.node.toml.
+#
+# Boots an in-process PGlite server (port 5432) inside the orchestrator and
+# points node + batcher at it over localhost. The PGlite data dir lives on
+# a persistent Fly volume so state survives machine restarts / redeploys.
+#
+# This is a stop-gap while we wait for new @effectstream/db features that
+# make Neon viable in production (opt-out of pg_ivm + pg pool reconnect
+# handling for ECONNRESETs from Neon's serverless-compute autosuspend).
+#
+# Deploy with:
+#   ./deploy_pglite.sh
+#
+# Reversible: `fly deploy --config fly.node.toml` switches back to Neon.
+
+app = "canvas-node"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  EFFECTSTREAM_API_PORT = "9999"
+  BATCHER_PORT = "3334"
+  CHAIN_ID = "8453"
+  CHAIN_NAME = "Base"
+
+  # PGlite mode — embedded Postgres running in the orchestrator. The pg
+  # client connects over localhost; @effectstream/db's start-pglite.ts
+  # uses trust auth, so DB_PW is a placeholder that just satisfies the
+  # required-env check in packages/node/config.mainnet.ts.
+  PGLITE = "true"
+  # MUST live inside the mounted volume below. PGlite writes wal/data
+  # files here and will lose everything on a machine roll if this is on
+  # ephemeral storage. Shares the batcher_data volume — PGlite and the
+  # batcher tx queue combined fit comfortably under 1GB.
+  PGLITE_DATA_DIR = "/app/batcher-data/pgdata"
+
+  DB_HOST = "localhost"
+  DB_PORT = "5432"
+  DB_NAME = "postgres"
+  DB_USER = "postgres"
+  DB_PW = "trust"
+  # Force SSL off — PGlite's pg-gateway shim doesn't speak SSL and pg
+  # otherwise reads PGSSLMODE from any leftover Neon-mode secret, then
+  # sends an SSLRequest the gateway rejects with "The server does not
+  # support SSL connections" → node crashes on first pool init.
+  # deploy_pglite.sh also unsets any PGSSLMODE secret as a belt-and-
+  # suspenders guard, since Fly secrets would override this [env].
+  PGSSLMODE = "disable"
+
+  # RPC throttling — same as fly.node.toml.
+  EVM_STEP_SIZE = "100"
+  EVM_DELAY_MS = "200"
+
+[processes]
+  # Same orchestrator entry as fly.node.toml — start.mainnet.ts gates the
+  # PGlite process on `PGLITE === "true"` in [env] above.
+  app = "bunx orchestrator start --config start.mainnet.ts"
+
+# Shared volume — holds the batcher's file-backed tx queue at the root and
+# PGlite's data dir at /app/batcher-data/pgdata. Combined footprint is well
+# under 1GB (Fly's minimum volume size). Tradeoff: a corrupt PGlite dir
+# can't be recovered without touching batcher state, but recovery in
+# practice means re-syncing from chain anyway.
+[[mounts]]
+  source = "batcher_data"
+  destination = "/app/batcher-data"
+  processes = ["app"]
+
+# ---------------------------------------------------------------------------
+# Public HTTPS endpoint #1 — Node API on internal port 9999.
+# ---------------------------------------------------------------------------
+[http_service]
+  internal_port = 9999
+  force_https = true
+  auto_stop_machines = "off"
+  auto_start_machines = false
+  min_machines_running = 1
+  processes = ["app"]
+
+  [[http_service.checks]]
+    interval = "60s"
+    timeout = "30s"
+    grace_period = "300s"
+    method = "GET"
+    path = "/api/health"
+
+# ---------------------------------------------------------------------------
+# Public HTTPS endpoint #2 — Batcher on internal port 3334.
+# ---------------------------------------------------------------------------
+[[services]]
+  internal_port = 3334
+  protocol = "tcp"
+  processes = ["app"]
+
+  [[services.ports]]
+    port = 3334
+    handlers = ["http", "tls"]
+    force_https = true
+
+  [[services.tcp_checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "60s"
+
+# 1GB is not enough in PGlite mode — measured footprint on a live machine
+# was ~850MB anonymous memory (bun runtime × 3-4 procs + PGlite WASM heap
+# + pg_ivm + effectstream node state + batcher SDK), leaving MemAvailable
+# at 0 and OOM-killing node before the API came up. shared-cpu-1x supports
+# up to 2GB, so CPU billing tier stays the same as the Neon-mode deploy.
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "2048mb"
