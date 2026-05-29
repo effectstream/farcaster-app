@@ -157,9 +157,26 @@ fi
 # Stage PGLITE_RESET=true so the next boot wipes the data dir. start.mainnet.ts
 # prepends a wipe process gated on this env. Staged secrets apply with the
 # deploy below, no extra restart.
+# When resetting, we also fetch the latest chain tip from Base RPC and stage
+# START_BLOCKHEIGHT to ensure syncing starts from the current tip.
 if [[ "$RESET" == "true" ]]; then
   echo ">> --reset given: staging PGLITE_RESET=true (will wipe pgdata on boot)"
-  fly secrets set -a "$APP_NAME" --stage PGLITE_RESET=true
+  
+  echo ">> Fetching latest block height from Base RPC..."
+  HEX_TIP=$(curl -s -X POST -H "Content-Type: application/json" \
+    --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
+    https://mainnet.base.org | jq -r '.result' || true)
+
+  if [[ "$HEX_TIP" =~ ^0x[0-9a-fA-F]+$ ]]; then
+    TIP=$(printf "%d" "$HEX_TIP")
+    echo ">> Found Base tip: $TIP"
+    echo ">> Staging PGLITE_RESET=true and START_BLOCKHEIGHT=$TIP"
+    fly secrets set -a "$APP_NAME" --stage PGLITE_RESET=true START_BLOCKHEIGHT="$TIP"
+    SECRET_LIST+=$'\nSTART_BLOCKHEIGHT'
+  else
+    echo "warning: failed to fetch chain tip from Base RPC, only staging PGLITE_RESET=true." >&2
+    fly secrets set -a "$APP_NAME" --stage PGLITE_RESET=true
+  fi
 fi
 
 # Required runtime secrets (set by humans, not by this script). We warn but
