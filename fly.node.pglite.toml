@@ -49,9 +49,26 @@ primary_region = "iad"
   # suspenders guard, since Fly secrets would override this [env].
   PGSSLMODE = "disable"
 
-  # RPC throttling — same as fly.node.toml.
-  EVM_STEP_SIZE = "100"
+  # RPC throttling. The EVM fetcher requests eth_getLogs over [from, from+stepSize]
+  # — i.e. (stepSize + 1) blocks per call (see fetcher.ts intervalFromStart). Alchemy's
+  # FREE tier caps eth_getLogs at a 10-block range; an over-range call is rejected with
+  # -32600 and the fetcher swallows it, silently advancing past every event (0 logs →
+  # 0 inputs/canvases). So on free-tier Alchemy stepSize MUST be <= 9 (→ 10-block range).
+  # 9 works for steady-state at the tip; deep catch-up is slow (10 blocks/call) and bumps
+  # the ~300 CU/sec cap, so we start the node AT the tip (deploy_pglite.sh --reset). Bump
+  # to ~100 only if EVM_RPC_URL moves to a plan/endpoint without the 10-block cap.
+  # NOTE: also set as a Fly secret, which overrides this [env] — change both.
+  EVM_STEP_SIZE = "9"
   EVM_DELAY_MS = "200"
+
+  # Empty-block coalescing MUST stay false for this app. It only flushes a
+  # coalesced run when the main chain's buffer momentarily empties (atTip) or
+  # at the 1000-block cap. Our main clock is NTP (pure arithmetic): its fetcher
+  # always keeps ~3 blocks buffered, so atTip is never reached and empty blocks
+  # only flush every ~1000 NTP slots (~33 min at 2s/block). With it on, the node
+  # applied block 1 (the migration) then stalled — block height frozen, never
+  # reaching the tip. Leave false so each block applies as it is produced.
+  EFFECTSTREAM_COALESCE_EMPTY_BLOCKS = "false"
 
 [processes]
   # Same orchestrator entry as fly.node.toml — start.mainnet.ts gates the
