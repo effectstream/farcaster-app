@@ -9,8 +9,8 @@
     "serve": "bun run server/main.ts"
   },
   "dependencies": {
-    "@effectstream/event-client": "0.100.18",
-    "@effectstream/wallets": "0.100.18",
+    "@effectstream/event-client": "0.100.28",
+    "@effectstream/wallets": "0.100.28",
     "@farcaster-canvas/shared": "0.1.0",
     "@farcaster/miniapp-sdk": "^0.1.0",
     "@fastify/static": "^8.0.0",

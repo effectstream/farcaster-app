@@ -63,7 +63,15 @@ if (typeof process !== "undefined") {
 }
 
 export const config = new ConfigBuilder()
-  .setNamespace((b) => b.setSecurityNamespace("farcaster-canvas"))
+  // MUST match the namespace the frontend signs with and the batcher admits with.
+  // The frontend (effectstream-config.ts EffectstreamConfig appName) and batcher
+  // (batcher.mainnet.ts BatcherConfig.namespace) both use "". The node verifies each
+  // batched input's signature via getReadNamespaces(securityNamespace); if it doesn't
+  // match the signer's namespace, verifySignature fails and EVERY batched input is
+  // dropped as "Invalid signature for batched message" — events get fetched but no
+  // canvas/paint is ever created. Was "farcaster-canvas" (verifier ≠ signer). Keep ""
+  // until the frontend+batcher are redeployed with a real namespace.
+  .setNamespace((b) => b.setSecurityNamespace(""))
   .buildNetworks((b) =>
     b
       .addNetwork({

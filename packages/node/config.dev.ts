@@ -34,7 +34,10 @@ if (typeof process !== "undefined") {
 }
 
 export const config = new ConfigBuilder()
-  .setNamespace((b) => b.setSecurityNamespace("farcaster-canvas"))
+  // Must match the namespace the frontend signs with / batcher admits with (both "").
+  // A verifier≠signer namespace mismatch drops every batched input at signature
+  // verification (see config.mainnet.ts for the full explanation).
+  .setNamespace((b) => b.setSecurityNamespace(""))
   .buildNetworks((b) =>
     b
       .addNetwork({
